@@ -1,51 +1,72 @@
-// Create a web server that listens for requests on port 3000. The server should respond to GET requests for the path /comments with a JSON object that represents a list of comments. The list should have at least 3 comments in it. Each comment should have the following keys: id, username, comment.
-// Example response:
-// [
-//   {
-//     "id": 1,
-//     "username": "user1",
-//     "comment": "this is a comment"
-//   },
-//   {
-//     "id": 2,
-//     "username": "user2",
-//     "comment": "this is another comment"
-//   },
-//   {
-//     "id": 3,
-//     "username": "user3",
-//     "comment": "this is a third comment"
-//   }
-// ]
-// You can use the express library to help you with this challenge. Here is an example of how you can use express to create a simple web server:
+// Create web server
+// Run web server
+// Go to URL: http://localhost:3000/
+// Check the console for the log
+// Check the network tab for the request
 
-var express = require('express');
-var app = express();
+// Import the required modules
+const express = require('express');
+const app = express();
+const path = require('path');
+const comments = require('./comments');
 
+// Set up the middleware
+app.use(express.json());
+app.use(express.static('public'));
+
+// Route to get all comments
 app.get('/comments', (req, res) => {
-  res.json([
-    {
-      "id": 1,
-      "username": "user1",
-      "comment": "this is a comment"
-    },
-    {
-      "id": 2,
-      "username": "user2",
-      "comment": "this is another comment"
-    },
-    {
-      "id": 3,
-      "username": "user3",
-      "comment": "this is a third comment"
-    }
-  ]);
+  res.json(comments);
 });
 
+// Route to get a comment by ID
+app.get('/comments/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const comment = comments.find((comment) => comment.id === id);
+  if (comment) {
+    res.json(comment);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+// Route to add a new comment
+app.post('/comments', (req, res) => {
+  const comment = req.body;
+  if (comment && comment.username && comment.message) {
+    comment.id = comments.length + 1;
+    comments.push(comment);
+    res.status(201).json(comment);
+  } else {
+    res.sendStatus(400);
+  }
+});
+
+// Route to update a comment by ID
+app.put('/comments/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const comment = comments.find((comment) => comment.id === id);
+  if (comment) {
+    Object.assign(comment, req.body);
+    res.json(comment);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+// Route to delete a comment by ID
+app.delete('/comments/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const index = comments.findIndex((comment) => comment.id === id);
+  if (index !== -1) {
+    comments.splice(index, 1);
+    res.sendStatus(204);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+// Start the server
 app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+  console.log('Server started');
 });
-
-// To test your server, you can use the curl command in your terminal:
-// curl http://localhost:3000/comments
-// The curl command should return a JSON object that represents a list of comments.
